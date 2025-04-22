@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - Reset Votes</title>
+  <style>
+    body {
+      background-color: #fff5e6;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      color: #663300;
+      display: none; /* hidden until password is correct */
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background-color: #cc3300;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #aa2200;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+  <p><strong>Warning:</strong> This will reset all votes to 0.</p>
+  <button onclick="resetVotes()">Reset All Votes</button>
+  <button onclick="window.location.href='index.html'">Back to Voting Page</button>
+
+  <script type="module">
+    const password = "rhhs2025"; // 🛡️ CHANGE YOUR PASSWORD HERE
+
+    const entered = prompt("Enter admin password:");
+    if (entered === password) {
+      document.body.style.display = "block";
+    } else {
+      alert("Access denied.");
+      window.location.href = "index.html"; // Redirect if wrong password
+    }
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
+      authDomain: "votes-15924.firebaseapp.com",
+      projectId: "votes-15924",
+      storageBucket: "votes-15924.firebasestorage.app",
+      messagingSenderId: "589430506641",
+      appId: "1:589430506641:web:aa514a8531fa777cf7ab30",
+      measurementId: "G-LMMYYE4K0D"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const candidates = [
+      "ناجي وسام المعلم",
+      "جوري رامي العاكوم",
+      "ليلا محمود بسيوني",
+      "تيم زاهر البابا",
+      "أحمد ماهر الخطيب",
+      "تاليا محمد الحريري",
+      "كريم هادي مروه",
+      "حيدر مصطفى فرحات",
+      "يمنى محمود حرب"
+    ];
+
+    window.resetVotes = async function () {
+      for (let name of candidates) {
+        await setDoc(doc(db, "votes", name), { votes: 0 });
+      }
+      alert("All votes have been reset to 0.");
+    };
+  </script>
+</body>
+</html>
