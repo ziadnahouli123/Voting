@@ -49,9 +49,8 @@
       margin-top: 8px;
     }
 
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+    #controls {
+      margin-top: 30px;
     }
   </style>
 </head>
@@ -61,16 +60,15 @@
   <div id="candidates"></div>
 
   <div id="controls">
-    <button onclick="resetVotes()">Reset All Votes</button>
-    <a href="results.html"><button>View Live Votes</button></a>
+    <button onclick="window.location.href='admin.html'">Go to Admin Panel</button>
+    <button onclick="window.location.href='results.html'">View Live Results</button>
   </div>
 
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
       authDomain: "votes-15924.firebaseapp.com",
@@ -84,7 +82,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Candidate data
     const candidates = [
       { name: "ناجي وسام المعلم", img: "naji.jpeg" },
       { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
@@ -110,7 +107,6 @@
       container.appendChild(div);
     });
 
-    // Fetch vote count from Firestore for each candidate
     candidates.forEach((c, i) => {
       const docRef = doc(db, "votes", c.name);
       onSnapshot(docRef, (docSnap) => {
@@ -119,18 +115,10 @@
       });
     });
 
-    // Vote function
     window.vote = async function(index) {
       const name = candidates[index].name;
       const docRef = doc(db, "votes", name);
       await updateDoc(docRef, { votes: increment(1) });
-    };
-
-    // Reset votes
-    window.resetVotes = async function() {
-      for (const c of candidates) {
-        await setDoc(doc(db, "votes", c.name), { votes: 0 });
-      }
     };
   </script>
 </body>
