@@ -2,78 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rafic Hariri High School Voting</title>
+  <title>Voting Page</title>
   <style>
     body {
-      background-color: #e0f0ff;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #eaf7ff;
       text-align: center;
-      color: #003366;
-      padding: 20px;
+      padding: 40px;
+      color: #003d66;
     }
 
     h1 {
-      font-size: 2.5em;
-      margin-bottom: 30px;
+      font-size: 3rem;
+      margin-bottom: 40px;
+    }
+
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
     }
 
     .candidate {
-      display: inline-block;
-      margin: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background-color: #ffffff;
+      border: 2px solid #0099cc;
+      border-radius: 15px;
+      padding: 20px 30px;
+      width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      font-size: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none; /* Disable interaction with the image */
     }
 
-    img {
-      width: 200px;
-      height: 200px;
+    .candidate img {
+      width: 150px;
+      height: 150px;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 50%;
+      border: 2px solid #006699;
+      margin-bottom: 15px;
+      pointer-events: none; /* Disable right-click and interaction */
     }
 
-    p {
-      font-size: 18px;
+    .candidate h2 {
+      font-size: 1.8rem;
       margin: 10px 0;
     }
 
-    button {
-      background-color: #0066cc;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 8px;
+    .candidate p {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #006699;
+      margin: 0;
     }
 
-    #controls {
-      margin-top: 30px;
+    #adminBtn, #liveResultsBtn {
+      background-color: #0099cc;
+      color: white;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      margin-top: 40px;
+      cursor: pointer;
     }
+
+    #adminBtn:hover, #liveResultsBtn:hover {
+      background-color: #006699;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo img {
+      width: 200px; /* Adjust size of the logo */
+      height: auto;
+    }
+
   </style>
 </head>
 <body>
-  <h1>انتخاب ممثل ثانويّة رفيق الحريري في المجلس البلدي للأطفالي</h1>
-
-  <div id="candidates"></div>
-
-  <div id="controls">
-    <button onclick="window.location.href='admin.html'">Go to Admin Panel</button>
-    <button onclick="window.location.href='results.html'">نتائج التصويت المباشر</button>
+  <div class="logo">
+    <img src="rhhs.png" alt="Logo" />
   </div>
+  <h1>انتخاب ممثل ثانويّة رفيق الحريري في المجلس البلدي للأطفال
+</h1>
+  <div class="results" id="resultsContainer"></div>
 
-  <!-- Firebase SDK -->
+  <button id="liveResultsBtn" onclick="window.location.href='results.html'">نتائج التصويت المباشر</button>
+  <button id="adminBtn" onclick="window.location.href='admin.html'">Go to Admin</button>
+
   <script type="module">
+    // Firebase script
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
       authDomain: "votes-15924.firebaseapp.com",
       projectId: "votes-15924",
-      storageBucket: "votes-15924.firebasestorage.app",
+      storageBucket: "votes-15924.appspot.com",
       messagingSenderId: "589430506641",
       appId: "1:589430506641:web:aa514a8531fa777cf7ab30",
       measurementId: "G-LMMYYE4K0D"
@@ -82,44 +116,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const candidates = [
-      { name: "ناجي وسام المعلم", img: "naji1.jpeg" },
-      { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
-      { name: "ليلا محمود بسيوني", img: "layla.jpeg" },
-      { name: "تيم زاهر البابا", img: "taym.jpeg" },
-      { name: "أحمد ماهر الخطيب", img: "ahmad.jpeg" },
-      { name: "تاليا محمد الحريري", img: "talia.jpeg" },
-      { name: "كريم هادي مروه", img: "kareem.jpeg" },
-      { name: "حيدر مصطفى فرحات", img: "7aidar.jpeg" },
-      { name: "يمنى محمود حرب", img: "yomna.jpeg" }
-    ];
+    const resultsContainer = document.getElementById("resultsContainer");
 
-    const container = document.getElementById("candidates");
-    candidates.forEach((c, i) => {
-      const div = document.createElement("div");
-      div.className = "candidate";
-      div.innerHTML = `
-        <img src="${c.img}" alt="${c.name}">
-        <p><strong>${c.name}</strong></p>
-        <p id="vote-count-${i}">Votes: Loading...</p>
-        <button onclick="vote(${i})">Vote</button>
-      `;
-      container.appendChild(div);
-    });
-
-    candidates.forEach((c, i) => {
-      const docRef = doc(db, "votes", c.name);
-      onSnapshot(docRef, (docSnap) => {
-        const count = docSnap.exists() ? docSnap.data().votes : 0;
-        document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
-      });
-    });
-
-    window.vote = async function(index) {
-      const name = candidates[index].name;
-      const docRef = doc(db, "votes", name);
-      await updateDoc(docRef, { votes: increment(1) });
+    const imageMap = {
+      "ناجي وسام المعلم": "najy1.jpeg",
+      "جوري رامي العاكوم": "jouri.jpeg",
+      "ليلا محمود بسيوني": "layla.jpeg",
+      "تيم زاهر البابا": "taym.jpeg",
+      "أحمد ماهر الخطيب": "ahmad.jpeg",
+      "تاليا محمد الحريري": "talia1.jpeg",
+      "كريم هادي مروه": "kareem.jpeg",
+      "حيدر مصطفى فرحات": "7aidar.jpeg",
+      "يمنى محمود حرب": "yomna.jpeg"
     };
+
+    const renderResults = (snapshot) => {
+      const results = [];
+      snapshot.forEach(doc => {
+        const candidate = doc.id;
+        if (!results.some(result => result.name === candidate)) {
+          results.push({ name: candidate, votes: doc.data().votes || 0 });
+        }
+      });
+
+      results.sort((a, b) => b.votes - a.votes);
+
+      resultsContainer.innerHTML = results.map(result => {
+        const imageSrc = imageMap[result.name] || 'images/default.jpg'; // Fallback to a default image if not found
+        return `
+          <div class="candidate">
+            <img src="${imageSrc}" alt="${result.name}" onError="this.onerror=null;this.src='images/default.jpg';" />
+            <h2>${result.name}</h2>
+            <p>${result.votes}</p>
+          </div>
+        `;
+      }).join('');
+    };
+
+    onSnapshot(collection(db, "votes"), renderResults);
   </script>
 </body>
 </html>
