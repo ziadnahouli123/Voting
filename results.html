@@ -14,7 +14,13 @@
 
     h1 {
       font-size: 2.5em;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
+    }
+
+    #winner {
+      font-size: 24px;
+      color: green;
+      margin: 20px 0;
     }
 
     .candidate {
@@ -37,19 +43,34 @@
       font-size: 18px;
       margin: 10px 0;
     }
+
+    #end-btn {
+      background-color: crimson;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #end-btn:hover {
+      background-color: darkred;
+    }
   </style>
 </head>
 <body>
   <h1>Live Voting Results</h1>
-
+  <div id="winner"></div>
   <div id="candidates"></div>
+  <button id="end-btn">End Voting & Show Winner</button>
 
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
       authDomain: "votes-15924.firebaseapp.com",
@@ -63,7 +84,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Candidate data
     const candidates = [
       { name: "ناجي وسام المعلم", img: "naji.jpeg" },
       { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
@@ -77,6 +97,8 @@
     ];
 
     const container = document.getElementById("candidates");
+    const voteData = {}; // Store live vote counts here
+
     candidates.forEach((c, i) => {
       const div = document.createElement("div");
       div.className = "candidate";
@@ -86,15 +108,31 @@
         <p id="vote-count-${i}">Votes: Loading...</p>
       `;
       container.appendChild(div);
-    });
 
-    // Fetch vote count from Firestore for each candidate
-    candidates.forEach((c, i) => {
+      // Real-time vote updates
       const docRef = doc(db, "votes", c.name);
       onSnapshot(docRef, (docSnap) => {
         const count = docSnap.exists() ? docSnap.data().votes : 0;
         document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
+        voteData[c.name] = count;
       });
+    });
+
+    // End voting and show winner
+    document.getElementById("end-btn").addEventListener("click", () => {
+      if (Object.keys(voteData).length === 0) return;
+
+      let maxVotes = Math.max(...Object.values(voteData));
+      let winners = Object.entries(voteData)
+        .filter(([name, votes]) => votes === maxVotes)
+        .map(([name]) => name);
+
+      const winnerDiv = document.getElementById("winner");
+      if (winners.length === 1) {
+        winnerDiv.innerHTML = `🏆 <strong>Winner:</strong> ${winners[0]} with ${maxVotes} votes`;
+      } else {
+        winnerDiv.innerHTML = `🏆 <strong>Winners:</strong> ${winners.join(", ")} (Tie with ${maxVotes} votes)`;
+      }
     });
   </script>
 </body>
