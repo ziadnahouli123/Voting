@@ -53,16 +53,6 @@
       background-color: #ccc;
       cursor: not-allowed;
     }
-
-    #controls {
-      margin-top: 30px;
-    }
-
-    #winner {
-      font-size: 1.8em;
-      margin-top: 20px;
-      color: darkgreen;
-    }
   </style>
 </head>
 <body>
@@ -72,8 +62,7 @@
 
   <div id="controls">
     <button onclick="resetVotes()">Reset All Votes</button>
-    <button onclick="endVoting()">End Vote & Show Winner</button>
-    <p id="winner"></p>
+    <a href="results.html"><button>View Live Votes</button></a>
   </div>
 
   <!-- Firebase SDK -->
@@ -81,6 +70,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
       authDomain: "votes-15924.firebaseapp.com",
@@ -94,6 +84,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // Candidate data
     const candidates = [
       { name: "ناجي وسام المعلم", img: "naji.jpeg" },
       { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
@@ -119,8 +110,7 @@
       container.appendChild(div);
     });
 
-    let voted = localStorage.getItem("hasVoted") === "true";
-
+    // Fetch vote count from Firestore for each candidate
     candidates.forEach((c, i) => {
       const docRef = doc(db, "votes", c.name);
       onSnapshot(docRef, (docSnap) => {
@@ -129,38 +119,18 @@
       });
     });
 
+    // Vote function
     window.vote = async function(index) {
-      if (voted) return alert("You already voted!");
       const name = candidates[index].name;
       const docRef = doc(db, "votes", name);
       await updateDoc(docRef, { votes: increment(1) });
-      voted = true;
-      localStorage.setItem("hasVoted", "true");
-      document.querySelectorAll(".candidate button").forEach(btn => btn.disabled = true);
     };
 
+    // Reset votes
     window.resetVotes = async function() {
       for (const c of candidates) {
         await setDoc(doc(db, "votes", c.name), { votes: 0 });
       }
-      localStorage.removeItem("hasVoted");
-      voted = false;
-      document.querySelectorAll(".candidate button").forEach(btn => btn.disabled = false);
-      document.getElementById("winner").innerText = "";
-    };
-
-    window.endVoting = async function() {
-      const snapshot = await getDocs(collection(db, "votes"));
-      let maxVotes = -1;
-      let winnerName = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.votes > maxVotes) {
-          maxVotes = data.votes;
-          winnerName = doc.id;
-        }
-      });
-      document.getElementById("winner").innerText = `🎉 The winner is: ${winnerName} with ${maxVotes} votes! 🎉`;
     };
   </script>
 </body>
