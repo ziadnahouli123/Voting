@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Votes</title>
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: #003366;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+
+    .candidate {
+      display: inline-block;
+      margin: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Voting Results</h1>
+
+  <div id="candidates"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
+      authDomain: "votes-15924.firebaseapp.com",
+      projectId: "votes-15924",
+      storageBucket: "votes-15924.firebasestorage.app",
+      messagingSenderId: "589430506641",
+      appId: "1:589430506641:web:aa514a8531fa777cf7ab30",
+      measurementId: "G-LMMYYE4K0D"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Candidate data
+    const candidates = [
+      { name: "ناجي وسام المعلم", img: "naji.jpeg" },
+      { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
+      { name: "ليلا محمود بسيوني", img: "layla.jpeg" },
+      { name: "تيم زاهر البابا", img: "taym.jpeg" },
+      { name: "أحمد ماهر الخطيب", img: "ahmad.jpeg" },
+      { name: "تاليا محمد الحريري", img: "talia.jpeg" },
+      { name: "كريم هادي مروه", img: "kareem.jpeg" },
+      { name: "حيدر مصطفى فرحات", img: "7aidar.jpeg" },
+      { name: "يمنى محمود حرب", img: "yomna.jpeg" }
+    ];
+
+    const container = document.getElementById("candidates");
+    candidates.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "candidate";
+      div.innerHTML = `
+        <img src="${c.img}" alt="${c.name}">
+        <p><strong>${c.name}</strong></p>
+        <p id="vote-count-${i}">Votes: Loading...</p>
+      `;
+      container.appendChild(div);
+    });
+
+    // Fetch vote count from Firestore for each candidate
+    candidates.forEach((c, i) => {
+      const docRef = doc(db, "votes", c.name);
+      onSnapshot(docRef, (docSnap) => {
+        const count = docSnap.exists() ? docSnap.data().votes : 0;
+        document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
+      });
+    });
+  </script>
+</body>
+</html>
