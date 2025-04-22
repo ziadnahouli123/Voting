@@ -2,80 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Live Votes</title>
+  <title>Live Voting Results</title>
   <style>
     body {
-      background-color: #f9f9f9;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #eaf7ff;
       text-align: center;
-      color: #003366;
-      padding: 20px;
+      padding: 40px;
+      color: #003d66;
     }
 
     h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      font-size: 3rem;
+      margin-bottom: 40px;
     }
 
-    #winner {
-      font-size: 24px;
-      color: green;
-      margin: 20px 0;
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
     }
 
     .candidate {
-      display: inline-block;
-      margin: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background-color: #ffffff;
+      border: 2px solid #0099cc;
+      border-radius: 15px;
+      padding: 20px 30px;
+      width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      font-size: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    img {
-      width: 200px;
-      height: 200px;
+    .candidate img {
+      width: 150px;
+      height: 150px;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 50%;
+      border: 2px solid #006699;
+      margin-bottom: 15px;
     }
 
-    p {
-      font-size: 18px;
+    .candidate h2 {
+      font-size: 1.8rem;
       margin: 10px 0;
     }
 
-    #end-btn {
-      background-color: crimson;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 18px;
-      cursor: pointer;
-      margin-top: 20px;
+    .candidate p {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #006699;
+      margin: 0;
     }
 
-    #end-btn:hover {
-      background-color: darkred;
+    #endBtn {
+      background-color: #cc0000;
+      color: white;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      margin-top: 40px;
+      cursor: pointer;
+    }
+
+    #endBtn:hover {
+      background-color: #990000;
     }
   </style>
 </head>
 <body>
-  <h1>Live Voting Results</h1>
-  <div id="winner"></div>
-  <div id="candidates"></div>
-  <button id="end-btn">End Voting & Show Winner</button>
+  <h1>📊 Live Voting Results</h1>
+  <div class="results" id="resultsContainer"></div>
 
-  <!-- Firebase SDK -->
+  <button id="endBtn" onclick="endVoting()">End Voting & Show Winner</button>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
       authDomain: "votes-15924.firebaseapp.com",
       projectId: "votes-15924",
-      storageBucket: "votes-15924.firebasestorage.app",
+      storageBucket: "votes-15924.appspot.com",
       messagingSenderId: "589430506641",
       appId: "1:589430506641:web:aa514a8531fa777cf7ab30",
       measurementId: "G-LMMYYE4K0D"
@@ -84,56 +97,62 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const candidates = [
-      { name: "ناجي وسام المعلم", img: "naji.jpeg" },
-      { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
-      { name: "ليلا محمود بسيوني", img: "layla.jpeg" },
-      { name: "تيم زاهر البابا", img: "taym.jpeg" },
-      { name: "أحمد ماهر الخطيب", img: "ahmad.jpeg" },
-      { name: "تاليا محمد الحريري", img: "talia.jpeg" },
-      { name: "كريم هادي مروه", img: "kareem.jpeg" },
-      { name: "حيدر مصطفى فرحات", img: "7aidar.jpeg" },
-      { name: "يمنى محمود حرب", img: "yomna.jpeg" }
-    ];
+    const resultsContainer = document.getElementById("resultsContainer");
 
-    const container = document.getElementById("candidates");
-    const voteData = {}; // Store live vote counts here
+    const imageMap = {
+      "ناجي وسام المعلم": "naji.jpeg",
+      "جوري رامي العاكوم": "jouri.jpeg",
+      "ليلا محمود بسيوني": "layla.jpeg",
+      "تيم زاهر البابا": "taym.jpeg",
+      "أحمد ماهر الخطيب": "ahmad.jpeg",
+      "تاليا محمد الحريري": "talia.jpeg",
+      "كريم هادي مروه": "kareem.jpeg",
+      "حيدر مصطفى فرحات": "7aidar.jpeg",
+      "يمنى محمود حرب": "yomna.jpeg"
+    };
 
-    candidates.forEach((c, i) => {
-      const div = document.createElement("div");
-      div.className = "candidate";
-      div.innerHTML = `
-        <img src="${c.img}" alt="${c.name}">
-        <p><strong>${c.name}</strong></p>
-        <p id="vote-count-${i}">Votes: Loading...</p>
-      `;
-      container.appendChild(div);
-
-      // Real-time vote updates
-      const docRef = doc(db, "votes", c.name);
-      onSnapshot(docRef, (docSnap) => {
-        const count = docSnap.exists() ? docSnap.data().votes : 0;
-        document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
-        voteData[c.name] = count;
+    const renderResults = (snapshot) => {
+      const results = [];
+      snapshot.forEach(doc => {
+        results.push({ name: doc.id, votes: doc.data().votes || 0 });
       });
-    });
 
-    // End voting and show winner
-    document.getElementById("end-btn").addEventListener("click", () => {
-      if (Object.keys(voteData).length === 0) return;
+      results.sort((a, b) => b.votes - a.votes); // sort by votes
 
-      let maxVotes = Math.max(...Object.values(voteData));
-      let winners = Object.entries(voteData)
-        .filter(([name, votes]) => votes === maxVotes)
-        .map(([name]) => name);
+      resultsContainer.innerHTML = results.map(result => `
+        <div class="candidate">
+          <img src="${imageMap[result.name] || 'default.jpg'}" alt="${result.name}" />
+          <h2>${result.name}</h2>
+          <p>${result.votes}</p>
+        </div>
+      `).join('');
+    };
 
-      const winnerDiv = document.getElementById("winner");
+    onSnapshot(collection(db, "votes"), renderResults);
+
+    window.endVoting = () => {
+      const cards = document.querySelectorAll('.candidate');
+      let maxVotes = 0;
+      let winners = [];
+
+      cards.forEach(card => {
+        const name = card.querySelector("h2").textContent;
+        const votes = parseInt(card.querySelector("p").textContent);
+
+        if (votes > maxVotes) {
+          maxVotes = votes;
+          winners = [name];
+        } else if (votes === maxVotes) {
+          winners.push(name);
+        }
+      });
+
       if (winners.length === 1) {
-        winnerDiv.innerHTML = `🏆 <strong>Winner:</strong> ${winners[0]} with ${maxVotes} votes`;
+        alert(`🏆 Winner: ${winners[0]} with ${maxVotes} votes!`);
       } else {
-        winnerDiv.innerHTML = `🏆 <strong>Winners:</strong> ${winners.join(", ")} (Tie with ${maxVotes} votes)`;
+        alert(`🤝 It's a tie between:\n${winners.join("\n")} with ${maxVotes} votes each!`);
       }
-    });
+    };
   </script>
 </body>
 </html>
