@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>نتائج التصويت المباشر</title>
+  <title>Live Voting Results</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -35,6 +35,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      pointer-events: none; /* Disable interaction with the image */
     }
 
     .candidate img {
@@ -44,6 +45,7 @@
       border-radius: 50%;
       border: 2px solid #006699;
       margin-bottom: 15px;
+      pointer-events: none; /* Disable right-click and interaction */
     }
 
     .candidate h2 {
@@ -72,15 +74,30 @@
     #endBtn:hover {
       background-color: #990000;
     }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo img {
+      width: 200px; /* Adjust size of the logo */
+      height: auto;
+    }
+
   </style>
 </head>
 <body>
+  <div class="logo">
+    <img src="rhhs.png" alt="Logo" />
+  </div>
   <h1>📊 نتائج التصويت المباشر</h1>
   <div class="results" id="resultsContainer"></div>
 
   <button id="endBtn" onclick="endVoting()">إنهاء التصويت وإظهار الفائز</button>
 
   <script type="module">
+    // Firebase script
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
@@ -100,32 +117,38 @@
     const resultsContainer = document.getElementById("resultsContainer");
 
     const imageMap = {
-      "ناجي وسام المعلم": "naji1.jpeg",
-      "جوري رامي العاكوم": "jouri.jpeg",
-      "ليلا محمود بسيوني": "layla.jpeg",
-      "تيم زاهر البابا": "taym.jpeg",
-      "أحمد ماهر الخطيب": "ahmad.jpeg",
-      "تاليا محمد الحريري": "talia.jpeg",
-      "كريم هادي مروه": "kareem.jpeg",
-      "حيدر مصطفى فرحات": "7aidar.jpeg",
-      "يمنى محمود حرب": "yomna.jpeg"
+      "ناجي وسام المعلم": "images/najy1.jpeg",
+      "جوري رامي العاكوم": "images/jouri.jpeg",
+      "ليلا محمود بسيوني": "images/layla.jpeg",
+      "تيم زاهر البابا": "images/taym.jpeg",
+      "أحمد ماهر الخطيب": "images/ahmad.jpeg",
+      "تاليا محمد الحريري": "images/talia.jpeg",
+      "كريم هادي مروه": "images/kareem.jpeg",
+      "حيدر مصطفى فرحات": "images/7aidar.jpeg",
+      "يمنى محمود حرب": "images/yomna.jpeg"
     };
 
     const renderResults = (snapshot) => {
       const results = [];
       snapshot.forEach(doc => {
-        results.push({ name: doc.id, votes: doc.data().votes || 0 });
+        const candidate = doc.id;
+        if (!results.some(result => result.name === candidate)) {
+          results.push({ name: candidate, votes: doc.data().votes || 0 });
+        }
       });
 
-      results.sort((a, b) => b.votes - a.votes); // sort by votes
+      results.sort((a, b) => b.votes - a.votes);
 
-      resultsContainer.innerHTML = results.map(result => `
-        <div class="candidate">
-          <img src="${imageMap[result.name] || 'default.jpg'}" alt="${result.name}" />
-          <h2>${result.name}</h2>
-          <p>${result.votes}</p>
-        </div>
-      `).join('');
+      resultsContainer.innerHTML = results.map(result => {
+        const imageSrc = imageMap[result.name] || 'images/default.jpg'; // Fallback to a default image if not found
+        return `
+          <div class="candidate">
+            <img src="${imageSrc}" alt="${result.name}" onError="this.onerror=null;this.src='images/default.jpg';" />
+            <h2>${result.name}</h2>
+            <p>${result.votes}</p>
+          </div>
+        `;
+      }).join('');
     };
 
     onSnapshot(collection(db, "votes"), renderResults);
