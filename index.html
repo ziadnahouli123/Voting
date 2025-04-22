@@ -2,26 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Voting Page</title>
+  <title>Rafic Hariri High School Voting</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
       background-color: #eaf7ff;
+      font-family: 'Segoe UI', sans-serif;
+      color: #003d66;
       text-align: center;
       padding: 40px;
-      color: #003d66;
     }
 
     h1 {
       font-size: 3rem;
       margin-bottom: 40px;
-    }
-
-    .results {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 30px;
     }
 
     .candidate {
@@ -35,7 +28,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      pointer-events: none; /* Disable interaction with the image */
+      margin: 20px;
     }
 
     .candidate img {
@@ -45,7 +38,6 @@
       border-radius: 50%;
       border: 2px solid #006699;
       margin-bottom: 15px;
-      pointer-events: none; /* Disable right-click and interaction */
     }
 
     .candidate h2 {
@@ -58,6 +50,21 @@
       font-weight: bold;
       color: #006699;
       margin: 0;
+    }
+
+    .voteButton {
+      background-color: #0099cc;
+      color: white;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .voteButton:hover {
+      background-color: #006699;
     }
 
     #adminBtn, #liveResultsBtn {
@@ -85,23 +92,29 @@
       height: auto;
     }
 
+    .results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
   </style>
 </head>
 <body>
   <div class="logo">
     <img src="rhhs.png" alt="Logo" />
   </div>
-  <h1>انتخاب ممثل ثانويّة رفيق الحريري في المجلس البلدي للأطفال
-</h1>
-  <div class="results" id="resultsContainer"></div>
+  <h1>انتخاب ممثل ثانويّة رفيق الحريري في المجلس البلدي للأطفال</h1>
+  <div class="results" id="candidates"></div>
 
-  <button id="liveResultsBtn" onclick="window.location.href='results.html'">نتائج التصويت المباشر</button>
-  <button id="adminBtn" onclick="window.location.href='admin.html'">Go to Admin</button>
+  <div id="controls">
+    <button id="liveResultsBtn" onclick="window.location.href='results.html'">نتائج التصويت المباشر</button>
+    <button id="adminBtn" onclick="window.location.href='admin.html'">Go to Admin</button>
+  </div>
 
   <script type="module">
-    // Firebase script
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getFirestore, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
@@ -116,44 +129,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const resultsContainer = document.getElementById("resultsContainer");
+    const candidates = [
+      { name: "ناجي وسام المعلم", img: "naji.jpeg" },
+      { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
+      { name: "ليلا محمود بسيوني", img: "layla.jpeg" },
+      { name: "تيم زاهر البابا", img: "taym.jpeg" },
+      { name: "أحمد ماهر الخطيب", img: "ahmad.jpeg" },
+      { name: "تاليا محمد الحريري", img: "talia.jpeg" },
+      { name: "كريم هادي مروه", img: "kareem.jpeg" },
+      { name: "حيدر مصطفى فرحات", img: "7aidar.jpeg" },
+      { name: "يمنى محمود حرب", img: "yomna.jpeg" }
+    ];
 
-    const imageMap = {
-      "ناجي وسام المعلم": "naji1.jpeg",
-      "جوري رامي العاكوم": "jouri.jpeg",
-      "ليلا محمود بسيوني": "layla.jpeg",
-      "تيم زاهر البابا": "taym.jpeg",
-      "أحمد ماهر الخطيب": "ahmad.jpeg",
-      "تاليا محمد الحريري": "talia.jpeg",
-      "كريم هادي مروه": "kareem.jpeg",
-      "حيدر مصطفى فرحات": "7aidar.jpeg",
-      "يمنى محمود حرب": "yomna.jpeg"
-    };
+    const container = document.getElementById("candidates");
+    candidates.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "candidate";
+      div.innerHTML = `
+        <img src="${c.img}" alt="${c.name}">
+        <h2>${c.name}</h2>
+        <p id="vote-count-${i}">Votes: Loading...</p>
+        <button class="voteButton" onclick="vote(${i})">Vote</button>
+      `;
+      container.appendChild(div);
+    });
 
-    const renderResults = (snapshot) => {
-      const results = [];
-      snapshot.forEach(doc => {
-        const candidate = doc.id;
-        if (!results.some(result => result.name === candidate)) {
-          results.push({ name: candidate, votes: doc.data().votes || 0 });
-        }
+    candidates.forEach((c, i) => {
+      const docRef = doc(db, "votes", c.name);
+      onSnapshot(docRef, (docSnap) => {
+        const count = docSnap.exists() ? docSnap.data().votes : 0;
+        document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
       });
+    });
 
-      results.sort((a, b) => b.votes - a.votes);
-
-      resultsContainer.innerHTML = results.map(result => {
-        const imageSrc = imageMap[result.name] || 'images/default.jpg'; // Fallback to a default image if not found
-        return `
-          <div class="candidate">
-            <img src="${imageSrc}" alt="${result.name}" onError="this.onerror=null;this.src='images/default.jpg';" />
-            <h2>${result.name}</h2>
-            <p>${result.votes}</p>
-          </div>
-        `;
-      }).join('');
+    window.vote = async function(index) {
+      const name = candidates[index].name;
+      const docRef = doc(db, "votes", name);
+      await updateDoc(docRef, { votes: increment(1) });
     };
-
-    onSnapshot(collection(db, "votes"), renderResults);
   </script>
 </body>
 </html>
