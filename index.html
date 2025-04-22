@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rafic Hariri High School Voting</title>
+  <style>
+    body {
+      background-color: #e0f0ff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: #003366;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+
+    .candidate {
+      display: inline-block;
+      margin: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    button {
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #controls {
+      margin-top: 30px;
+    }
+
+    #winner {
+      font-size: 1.8em;
+      margin-top: 20px;
+      color: darkgreen;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vote for Your Favorite Candidate</h1>
+
+  <div id="candidates"></div>
+
+  <div id="controls">
+    <button onclick="resetVotes()">Reset All Votes</button>
+    <button onclick="endVoting()">End Vote & Show Winner</button>
+    <p id="winner"></p>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCELfo16XUDvXq2dclPcrShssITSYxZpfE",
+      authDomain: "votes-15924.firebaseapp.com",
+      projectId: "votes-15924",
+      storageBucket: "votes-15924.firebasestorage.app",
+      messagingSenderId: "589430506641",
+      appId: "1:589430506641:web:aa514a8531fa777cf7ab30",
+      measurementId: "G-LMMYYE4K0D"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const candidates = [
+      { name: "ناجي وسام المعلم", img: "naji.jpeg" },
+      { name: "جوري رامي العاكوم", img: "jouri.jpeg" },
+      { name: "ليلا محمود بسيوني", img: "layla.jpeg" },
+      { name: "تيم زاهر البابا", img: "taym.jpeg" },
+      { name: "أحمد ماهر الخطيب", img: "ahmad.jpeg" },
+      { name: "تاليا محمد الحريري", img: "talia.jpeg" },
+      { name: "كريم هادي مروه", img: "kareem.jpeg" },
+      { name: "حيدر مصطفى فرحات", img: "7aidar.jpeg" },
+      { name: "يمنى محمود حرب", img: "yomna.jpeg" }
+    ];
+
+    const container = document.getElementById("candidates");
+    candidates.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "candidate";
+      div.innerHTML = `
+        <img src="${c.img}" alt="${c.name}">
+        <p><strong>${c.name}</strong></p>
+        <p id="vote-count-${i}">Votes: Loading...</p>
+        <button onclick="vote(${i})">Vote</button>
+      `;
+      container.appendChild(div);
+    });
+
+    let voted = localStorage.getItem("hasVoted") === "true";
+
+    candidates.forEach((c, i) => {
+      const docRef = doc(db, "votes", c.name);
+      onSnapshot(docRef, (docSnap) => {
+        const count = docSnap.exists() ? docSnap.data().votes : 0;
+        document.getElementById(`vote-count-${i}`).innerText = `Votes: ${count}`;
+      });
+    });
+
+    window.vote = async function(index) {
+      if (voted) return alert("You already voted!");
+      const name = candidates[index].name;
+      const docRef = doc(db, "votes", name);
+      await updateDoc(docRef, { votes: increment(1) });
+      voted = true;
+      localStorage.setItem("hasVoted", "true");
+      document.querySelectorAll(".candidate button").forEach(btn => btn.disabled = true);
+    };
+
+    window.resetVotes = async function() {
+      for (const c of candidates) {
+        await setDoc(doc(db, "votes", c.name), { votes: 0 });
+      }
+      localStorage.removeItem("hasVoted");
+      voted = false;
+      document.querySelectorAll(".candidate button").forEach(btn => btn.disabled = false);
+      document.getElementById("winner").innerText = "";
+    };
+
+    window.endVoting = async function() {
+      const snapshot = await getDocs(collection(db, "votes"));
+      let maxVotes = -1;
+      let winnerName = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.votes > maxVotes) {
+          maxVotes = data.votes;
+          winnerName = doc.id;
+        }
+      });
+      document.getElementById("winner").innerText = `🎉 The winner is: ${winnerName} with ${maxVotes} votes! 🎉`;
+    };
+  </script>
+</body>
+</html>
