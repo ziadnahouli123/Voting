@@ -87,24 +87,31 @@
       height: auto;
     }
 
+    /* New Bottom Logo Style */
     .bottom-logo {
   position: fixed;
-  
   bottom: 20px;
   right: 20px;
   display: flex;
   align-items: center;
-  font-size: 40px; /* This makes the text 50px */
-  font-family: Arial, sans-serif;
+  font-size: 30px; /* Adjust this size to make the text bigger or smaller */
+  font-family: 'Arial', sans-serif; /* Change 'Arial' to any font you prefer */
   color: #003d66;
+  background-color: white; /* White background for the bottom logo area */
+  padding: 10px; /* Optional: Adds padding around the text */
+  border-radius: 10px; /* Optional: Adds rounded corners to the background */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: Adds shadow to make it pop */
 }
 
+.bottom-logo span {
+  margin-right: 10px; /* Adjusts space between the text and the logo */
+}
 
-    .bottom-logo img {
-      max-width: 250px;
-      height: auto;
-      margin-left: 10px;
-    }
+.bottom-logo img {
+  max-width: 250px;
+  height: auto;
+}
+
 
     /* Popup styles */
     .popup-overlay {
@@ -189,9 +196,11 @@
   </div>
 
   <!-- Bottom Right Logo with Text -->
-  <div class="bottom-logo">
-    <span>Done by:</span>
-    <img src="rhti.png" alt="Logo" />
+  <div class="bottom-logo-wrapper">
+    <div class="bottom-logo">
+      <span>Done by:</span>
+      <img src="rhti.png" alt="Logo" />
+    </div>
   </div>
 
   <!-- Firebase & Voting Script -->
@@ -239,7 +248,7 @@
 
       resultsContainer.innerHTML = results.map(result => {
         const imageSrc = imageMap[result.name] || 'images/default.jpg';
-        return `
+        return ` 
           <div class="candidate">
             <img src="${imageSrc}" alt="${result.name}" onError="this.onerror=null;this.src='images/default.jpg';" />
             <h2>${result.name}</h2>
