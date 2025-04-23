@@ -88,24 +88,30 @@
     }
 
     /* New Bottom Logo Style */
+    /* New Bottom Logo Style */
     .bottom-logo {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  font-size: 15px;  /* Adjust text size next to logo */
-  font-family: Arial, sans-serif;
-  color: #003d66;
-  background-color: white;  /* Add white background to avoid text overlap */
-  padding: 10px;
-  border-radius: 10px; /* Optional: to make the background rounded */
-}
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      background-color: #ffffffdd;
+      padding: 10px 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
 
-.bottom-logo img {
-  width: 250px;  /* Adjust the width of the logo */
-  height: auto;  /* Keep the aspect ratio intact */
-  max-width: 100%;
+    .bottom-logo img {
+      width: 200px;
+      height: auto;
+      margin-left: 10px;
+    }
+
+    .done-text {
+      font-size: 15px;
+      font-weight: bold;
+      color: #003d66;
 }
 
 
